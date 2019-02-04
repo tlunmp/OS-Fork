@@ -13,7 +13,7 @@
 #include <sys/wait.h>	
 
 void helpMenu();
-void forkProcess();
+void forkProcess(char *inputFileName);
 
 
 int main (int argc, char *argv[]) {
@@ -32,11 +32,11 @@ int main (int argc, char *argv[]) {
 				helpMenu();
 				return 1;
 			case 'p':
-				//inputFileName = optarg;	
-				printf("%s", inputFileName);	
+				strcpy(inputFileName, optarg);
+				forkProcess(inputFileName);
 				break;
 			case 'o':
-				printf("is awesome\n" );
+				strcpy(outputFileName, optarg);
 				break;	
 	
 		}
@@ -54,8 +54,26 @@ void helpMenu() {
 		printf("-o outputfilename \n");
 }
 
-void forkProcess() {
+void forkProcess(char *inputFileName) {
+	FILE *f = fopen("input.dat","r");
 
+	int bufSize = 100;
+	int newLineCount = 0;
+
+	char buffer[bufSize];
+
+	pid_t childpid = 0;
+	pid_t parentid = 0;
+
+	fgets(buffer, bufSize, f);
+		newLineCount++;
+	fclose(f);
+	
+	int pr_limit = atoi(buffer);	
+
+	printf("%d, newLine count %d", pr_limit, newLineCount);
+
+	
 
 }
 
