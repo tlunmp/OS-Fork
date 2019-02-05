@@ -27,7 +27,6 @@ int main (int argc, char *argv[]) {
 				return 1;
 			case 'i':
 				strcpy(inputFileName, optarg);
-				forkProcess(inputFileName, outputFileName);
 				break;
 			case 'o':
 				strcpy(outputFileName, optarg);
@@ -36,6 +35,107 @@ int main (int argc, char *argv[]) {
 		}
 
 
+	}
+
+	FILE *f = fopen(inputFileName,"r");
+
+	int bufSize = 100;
+	int newLineCount = 0;
+	int newLineCompare = 0;
+	char buffer[bufSize];
+
+	int stackSize = 0;
+	int status = 0;
+	
+	pid_t childpid = 0;
+	pid_t parentid = 0;
+
+	if(f  == NULL){
+		fprintf(stderr,"%s: ", argv[0]);
+		perror("Error");
+		return 0;
+	}
+
+
+	fgets(buffer, bufSize, f);
+		newLineCount++;
+	fclose(f);
+	
+	int ptr_limit = atoi(buffer);	
+	int ptr_count = 0;
+
+	int insideCounterLimit = 2;
+	int insideCounter = 1;
+	//printf("%d, newLine count %d", pr_limit, newLineCount);
+
+	
+	int i;
+
+	for (i = 0; i < ptr_limit; i++) {	
+
+		childpid = fork();
+	
+		if(childpid < 0) {
+			printf("error");
+		} else if (childpid == 0){	
+			FILE *f1 = fopen(inputFileName,"r");
+			if(f1 == NULL){
+
+				printf("%s", argv[0]);
+				perror("Error");
+				return 0;
+			}
+
+			while(fgets(buffer,bufSize,f1) != NULL){
+					
+				if (newLineCount == newLineCompare){
+					
+					//printf("%d\n",stackSize);
+					//printf("%d compare %d\n", insideCounterLimit, insideCounter);	
+					
+					if(insideCounterLimit == insideCounter) {
+								
+						FILE *out = fopen(outputFileName, "a");
+							
+						int stack[stackSize]; 	
+					
+						char *parser;
+						parser = strtok(buffer, " ");
+
+						int i;
+						for(i=0; i < stackSize; i++){
+							stack[i] = atoi(parser);
+							parser = strtok(NULL, " ");	
+						}
+
+						fprintf(out, "%d: ", getpid());
+						
+						int j=0;
+						for(j=stackSize-1; j >= 0; j--) {
+							fprintf(out, "%d ", stack[j]);
+						}
+						fprintf(out, "\n");
+				
+						break;
+					} else { 
+						stackSize = atoi(buffer);
+						insideCounter++;
+					}
+					
+				} else {
+
+					newLineCompare++;
+				}
+			}
+	
+			fclose(f1);
+			
+			exit(0);
+		} else {
+			wait(&status);
+			newLineCount += 2;
+			printf("This is the parent process. My pid is %d and my parent's id is %d.\n", getpid(), childpid);
+		}	
 	}
 
 	return 0;
@@ -57,6 +157,7 @@ void forkProcess(char *inputFileName, char *outputFileName) {
 	char buffer[bufSize];
 
 	int stackSize = 0;
+	int status = 0;
 	
 	pid_t childpid = 0;
 	pid_t parentid = 0;
@@ -72,54 +173,85 @@ void forkProcess(char *inputFileName, char *outputFileName) {
 	int insideCounter = 1;
 	//printf("%d, newLine count %d", pr_limit, newLineCount);
 
-	FILE *f1 = fopen(inputFileName,"r");
+	
+	int i;
 
+	for (i = 0; i < ptr_limit; i++) {	
+		childpid = fork();
+	
+		if(childpid < 0) {
+			printf("error");
+		} else if (childpid == 0){
+	
+			FILE *f1 = fopen(inputFileName,"r");
+			while(fgets(buffer,bufSize,f1) != NULL){
+				stackSize = atoi(buffer);	
+				printf("%d\n",getpid());
+			}
+			fclose(f1);
+
+			exit(0);
+		} else {
+			wait(&status);
+		}	
+	}
+
+/*
 	while(fgets(buffer,bufSize,f1) != NULL){
-			
-			if (newLineCount == newLineCompare){
-				if(insideCounterLimit == insideCounter){
-					
-					int stack[stackSize]; 	
-					
-					char *parser;
-					parser = strtok(buffer, " ");
-					
-					FILE *out = fopen(outputFileName, "a");
 
-					int i;
-					for(i=0; i < stackSize; i++){
-						stack[i] = atoi(parser);
-						parser = strtok(NULL, " ");	
-					}
+			
+		if (newLineCount == newLineCompare){
+				
+				int l;
+
+								
+					if(insideCounterLimit == insideCounter){
+						
+						
+							
+							FILE *out = fopen(outputFileName, "a");
+							
+							//printf("%d compare %d", insideCounterLimit, insideCounter);
+
+
+							int stack[stackSize]; 	
+					
+							char *parser;
+							parser = strtok(buffer, " ");
+				
 						
 
-					int j=0;
-					for(j=stackSize-1; j >= 0; j--) {
-						fprintf(out, "%d ", stack[j]);
-					}
-						fprintf(out, "\n");
-							
-					fclose(out);
-					insideCounterLimit += 2;
+							int i;
+							for(i=0; i < stackSize; i++){
+								stack[i] = atoi(parser);
+								parser = strtok(NULL, " ");	
+							}
+						
 
-				} else {
-					stackSize = atoi(buffer);	
-				}
-					insideCounter++;
+							int j=0;
+							for(j=stackSize-1; j >= 0; j--) {
+								fprintf(out, "%d ", stack[j]);
+							}
+							fprintf(out, "\n");
+					
+							fclose(out);
+
+							insideCounterLimit += 2;
+							fprintf(out, "child pid %d\n", getpid());
+							
+						}
+					} else {
+						stackSize = atoi(buffer);	
+					}
+						insideCounter++;
 			} else {
 			
 				newLineCompare++;
 
 			}
-
 	}	
 
 
-	
+*/	
 
 }
-
-
-
-
-
