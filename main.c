@@ -81,22 +81,25 @@ void forkProcess(char *inputFileName, char *outputFileName) {
 					
 					int stack[stackSize]; 	
 					
-					printf("%s", buffer);	
 					char *parser;
 					parser = strtok(buffer, " ");
 					
-					FILE *out = fopen(outputFileName, "ab");
+					FILE *out = fopen(outputFileName, "a");
 
 					int i;
 					for(i=0; i < stackSize; i++){
 						stack[i] = atoi(parser);
 						parser = strtok(NULL, " ");	
 					}
-					/*	
+						
+
 					int j=0;
-					for(j=0; j < stackSize; j++) {
-						printf("%d\n", stack[j]);
-					}*/
+					for(j=stackSize-1; j >= 0; j--) {
+						fprintf(out, "%d ", stack[j]);
+					}
+						fprintf(out, "\n");
+							
+					fclose(out);
 					insideCounterLimit += 2;
 
 				} else {
