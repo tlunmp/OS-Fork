@@ -1,8 +1,3 @@
-/* Ted Anthony L Uy
- * cs2750 PA6
- * 4/4/18
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -13,27 +8,26 @@
 #include <sys/wait.h>	
 
 void helpMenu();
-void forkProcess(char *inputFileName);
+void forkProcess(char *inputFileName, char *outputFileName);
 
 
 int main (int argc, char *argv[]) {
 
 	char inputFileName[] = "input.dat";
 	char outputFileName[] = "output.dat";
-	int stackSize = 0;
 	
 		
 	int c;
 
-	while((c = getopt (argc,argv, "hp:o:")) != -1) {
+	while((c = getopt (argc,argv, "hi:o:")) != -1) {
 
 		switch(c) {
 			case 'h':
 				helpMenu();
 				return 1;
-			case 'p':
+			case 'i':
 				strcpy(inputFileName, optarg);
-				forkProcess(inputFileName);
+				forkProcess(inputFileName, outputFileName);
 				break;
 			case 'o':
 				strcpy(outputFileName, optarg);
@@ -54,14 +48,16 @@ void helpMenu() {
 		printf("-o outputfilename \n");
 }
 
-void forkProcess(char *inputFileName) {
-	FILE *f = fopen("input.dat","r");
+void forkProcess(char *inputFileName, char *outputFileName) {
+	FILE *f = fopen(inputFileName,"r");
 
 	int bufSize = 100;
 	int newLineCount = 0;
-
+	int newLineCompare = 0;
 	char buffer[bufSize];
 
+	int stackSize = 0;
+	
 	pid_t childpid = 0;
 	pid_t parentid = 0;
 
@@ -69,9 +65,52 @@ void forkProcess(char *inputFileName) {
 		newLineCount++;
 	fclose(f);
 	
-	int pr_limit = atoi(buffer);	
+	int ptr_limit = atoi(buffer);	
+	int ptr_count = 0;
 
-	printf("%d, newLine count %d", pr_limit, newLineCount);
+	int insideCounterLimit = 2;
+	int insideCounter = 1;
+	//printf("%d, newLine count %d", pr_limit, newLineCount);
+
+	FILE *f1 = fopen(inputFileName,"r");
+
+	while(fgets(buffer,bufSize,f1) != NULL){
+			
+			if (newLineCount == newLineCompare){
+				if(insideCounterLimit == insideCounter){
+					
+					int stack[stackSize]; 	
+					
+					printf("%s", buffer);	
+					char *parser;
+					parser = strtok(buffer, " ");
+					
+					FILE *out = fopen(outputFileName, "ab");
+
+					int i;
+					for(i=0; i < stackSize; i++){
+						stack[i] = atoi(parser);
+						parser = strtok(NULL, " ");	
+					}
+					/*	
+					int j=0;
+					for(j=0; j < stackSize; j++) {
+						printf("%d\n", stack[j]);
+					}*/
+					insideCounterLimit += 2;
+
+				} else {
+					stackSize = atoi(buffer);	
+				}
+					insideCounter++;
+			} else {
+			
+				newLineCompare++;
+
+			}
+
+	}	
+
 
 	
 
