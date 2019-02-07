@@ -45,12 +45,14 @@ int main (int argc, char *argv[]) {
 	char buffer[bufSize];
 
 	int stackSize = 0;
-	int status = 0;
 	
 	pid_t childpid = 0;
-	pid_t parentid = 0;
 
-	if(f  == NULL){
+	//errorChecker
+	int fileErrorCounter = 0;
+	int forkNumberLength;
+
+	if(f == NULL){
 		fprintf(stderr,"%s: ", argv[0]);
 		perror("Error");
 		return 0;
@@ -58,15 +60,45 @@ int main (int argc, char *argv[]) {
 
 
 	fgets(buffer, bufSize, f);
+		if(f == NULL){
+			printf("%s", argv[0]);
+			perror("Error");
+			return 0;
+		}
+
 		newLineCount++;
 	fclose(f);
-	
-	int ptr_limit = atoi(buffer);	
-	int ptr_count = 0;
 
+	forkNumberLength = strlen(buffer);
+	
+	//check if there is 2 numbers terminates
+	int o;	
+	for(o=0; o < forkNumberLength; o++){
+		
+		if(isspace(buffer[o])){
+			fileErrorCounter++;
+		}
+
+	}	
+
+
+	//show error and terminate if there is more numbers
+	if(fileErrorCounter > 1) {
+		fprintf(stderr,"%s: Error: Read file fork too many argument\n", argv[0]);
+		return 0;
+	}
+	
+
+
+	int ptr_limit = atoi(buffer);	
+
+	int childArray[ptr_limit];	
+	
 	int insideCounterLimit = 2;
 	int insideCounter = 1;
-	//printf("%d, newLine count %d", pr_limit, newLineCount);
+
+	int childCounter =0;
+	
 
 	
 	int i;
@@ -74,7 +106,11 @@ int main (int argc, char *argv[]) {
 	for (i = 0; i < ptr_limit; i++) {	
 
 		childpid = fork();
+
 	
+		childArray[childCounter] = childpid;
+		
+		childCounter++;
 		if(childpid < 0) {
 			printf("error");
 		} else if (childpid == 0){	
@@ -90,8 +126,6 @@ int main (int argc, char *argv[]) {
 					
 				if (newLineCount == newLineCompare){
 					
-					//printf("%d\n",stackSize);
-					//printf("%d compare %d\n", insideCounterLimit, insideCounter);	
 					
 					if(insideCounterLimit == insideCounter) {
 								
@@ -129,15 +163,28 @@ int main (int argc, char *argv[]) {
 			}
 	
 			fclose(f1);
-			
 			exit(0);
 		} else {
+			int status;		
 			wait(&status);
 			newLineCount += 2;
-			printf("This is the parent process. My pid is %d and my parent's id is %d.\n", getpid(), childpid);
 		}	
+		
+
+			
 	}
 
+	
+		FILE *out1 = fopen(outputFileName, "a");
+		fprintf(out1, "All children where: ");
+			
+		int m;
+		for(m = 0; m <ptr_limit; m++ ) {
+			fprintf(out1,"%d ", childArray[m]);
+		}	
+
+		fprintf(out1,". parent is %d,\n", getpid());
+		fclose(out1);
 	return 0;
 }
 
