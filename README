@@ -1,0 +1,27 @@
+Ted Anthony L Uy
+CS4760
+Project 1
+
+
+This project would read the line by file, and parse the numbers. The first number of the line is number of forks. after reading the fork there will be loop that reads two line each. first line will be the number size of the stack, then the second line would be the numbers that needs to be parse and reversed the order then print it to the file.
+ 
+
+SYNTAX:
+-h  			help menu
+
+-i  inputfilename	inputfilename is where the filename reads and it will show error if there is no filename found on the directory. output filename 
+			should be default name is "output.dat"  where the result is generated.
+ 
+-o  outputfilename      this command will use the default input file which is "input.dat" then create an output result to outputfilename(Which is the user specified name of the file).
+  
+-i inputfilename -o outputfilename     this command can use inputfilename (user choose the name)  and  generate output to the outputfilename(user choose the outputname) if it doesnt exist create one.  
+
+
+make			builds and creates exectuable 'p1'
+make clean		cleans object files and executables
+
+
+HOW ERROR WORKS:
+
+
+
