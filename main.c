@@ -9,14 +9,24 @@
 
 void helpMenu();
 int errorCheckFile(char *inputFileName, int ptr_limit);
+int forkProcess(char *inputFileName, char *outputFileName, int ptr_limiti, char *arg0Name, int newLineCount);
 
 int main (int argc, char *argv[]) {
 
 	char inputFileName[] = "input.dat";
 	char outputFileName[] = "output.dat";
-	
+	int bufSize = 100;
+	char buffer[bufSize];
 		
+	int newLineCount = 0;
 	int c;
+
+	//errorChecker
+	int fileErrorCounter = 0;
+	int forkNumberLength;
+	int forkNumberError = 0;
+	char errorMessage[100];
+	
 
 	//getopt command for command line
 	while((c = getopt (argc,argv, "hi:o:")) != -1) {
@@ -30,30 +40,28 @@ int main (int argc, char *argv[]) {
 				break;
 			case 'o':
 				strcpy(outputFileName, optarg);
-				break;	
-	
+				break;
+			default:
+				printf("test");
+				break;
 		}
 
 
 	}
 
+
+	if(argc == 2) {
+		
+		//check if second argument are correct
+		if(strcmp(argv[1], "-i") == 0 || strcmp(argv[1], "-o") == 0 || strcmp(argv[1], "-h") == 0) {
+		} else {
+			fprintf(stderr, "%s: Error: Invalid 2nd Argument must be -i, -o, or -h \n",argv[0]);
+			return 0;
+		}
+	}
+
+
 	FILE *f = fopen(inputFileName,"r");
-	
-	int bufSize = 100;
-	int newLineCount = 0;
-	int newLineCompare = 0;
-	char buffer[bufSize];
-
-	int stackSize = 0;
-	
-	pid_t childpid = 0;
-
-	//errorChecker
-	int fileErrorCounter = 0;
-	int forkNumberLength;
-	int forkNumberError = 0;
-	int errorChild = 0;
-	char errorMessage[100];
 	
 	// if file open error and return
 	if(f == NULL){
@@ -78,15 +86,32 @@ int main (int argc, char *argv[]) {
 	//open files and read all the max lines check if theres is more fork than the first line number, if it is true then display  error
 	FILE *f2 = fopen(inputFileName,"r");
 
-	while(fgets(buffer, bufSize, f2)){
+	char  errorBuffer[bufSize];
+	//checks 
+	while(fgets(errorBuffer, bufSize, f2)){
 		if(f == NULL){
 			snprintf(errorMessage, sizeof(errorMessage), "%s: Error", argv[0]);
 			perror(errorMessage);
 			return 0;
 		}
 
-		forkNumberError++;
-	
+		int m;
+		int flag = 0;
+		forkNumberLength = strlen(errorBuffer);	
+		for(m=0; m < forkNumberLength; m++){	
+			if(isspace(errorBuffer[m]) && !isspace(errorBuffer[m+1])) {										
+				flag = 1;
+			}
+			if(errorBuffer[0] == '\n'){
+				flag = 0;
+			}
+
+		}
+
+		if(flag == 1) {
+			
+			forkNumberError++;
+		}
 	}
 	fclose(f2);
 
@@ -106,7 +131,6 @@ int main (int argc, char *argv[]) {
 
 		}	
 
-	
 
 		//show error and terminate if there is more numbers
 		if(fileErrorCounter > 1) {
@@ -117,20 +141,39 @@ int main (int argc, char *argv[]) {
 		fileErrorCounter = 0;
 
 
-		int childArray[ptr_limit];	
-	
-		int insideCounterLimit = 2;
-		int insideCounter = 1;
-
-		int childCounter =0;
-		
-		int i, line = 0;
-
+		//error Checking inside the files
 		int errorResult = errorCheckFile(inputFileName,ptr_limit);
 
-		printf("%d", errorResult);
 		
 		if(errorResult == 1) {
+			
+			//do the fork and pass the argv[0] for errors
+			forkProcess(inputFileName,outputFileName, ptr_limit,argv[0],newLineCount);		
+		} else {
+			fprintf(stderr,"%s: Error: Read File too many argument of stackSize or StackSize is not equal to numbers on the File\n", argv[0]);
+			return 0;
+		}	
+	} else {
+		fprintf(stderr,"%s: Error: Read file total fork less than or greather than the file input\n", argv[0]);
+		return 0;
+	}
+	return 0;
+}
+
+//forking process
+int forkProcess(char *inputFileName, char *outputFileName, int ptr_limit, char *arg0Name, int newLineCount) {
+		pid_t childpid = 0;
+		int bufSize = 100;
+		char buffer[bufSize];
+		int stackSize = 0;
+		int childArray[ptr_limit];		
+		int insideCounterLimit = 2;
+		int insideCounter = 1;
+		int childCounter =0;
+		int i;
+		int newLineCompare = 0;
+		char errorMessage[100];
+		
 			//starts the fork
 			for (i = 0; i < ptr_limit; i++) {	
 
@@ -138,17 +181,22 @@ int main (int argc, char *argv[]) {
 				childArray[childCounter] = childpid;
 		
 				childCounter++;
+
+				//fork Starts
 				if(childpid < 0) {
-					printf("error");
+					snprintf(errorMessage, sizeof(errorMessage), "%s: Error", arg0Name);
+					perror(errorMessage);	
 				} else if (childpid == 0){	
 					FILE *f1 = fopen(inputFileName,"r");
+					
+					//If file cannot find print error
 					if(f1 == NULL){
-						snprintf(errorMessage, sizeof(errorMessage), "%s: Error", argv[0]);
+						snprintf(errorMessage, sizeof(errorMessage), "%s: Error", arg0Name);
 						perror(errorMessage);
 						return 0;
 					}
 
-
+					//scans the file
 					while(fgets(buffer,bufSize,f1) != NULL){
 				
 						//when line reach the second line start the reading
@@ -163,7 +211,8 @@ int main (int argc, char *argv[]) {
 					
 								char *parser;
 								parser = strtok(buffer, " ");
-
+								
+								//parsing the numbers
 								int i;
 								for(i=0; i < stackSize; i++){
 									stack[i] = atoi(parser);
@@ -213,16 +262,12 @@ int main (int argc, char *argv[]) {
 			fprintf(out1,". parent is %d,\n", getpid());
 			fclose(out1);
 
-		} else {
-			return 0;
-		}	
-	} else {
-		printf("error");
 
-	}
 	return 0;
+
 }
 
+//error checking for inside the file
 int errorCheckFile(char *inputFileName, int ptr_limit ) {
 		//check if the file numbers are correct or not
 		FILE *f3 = fopen(inputFileName, "r");
@@ -241,8 +286,10 @@ int errorCheckFile(char *inputFileName, int ptr_limit ) {
 		int stackSizeTotal = 0;
 		int forkNumberLength = 0;
 
+		//read the line for errors
 		while(fgets(buffer,bufSize,f3) != NULL){
 			errorLine++;
+
 			if(newLineErrorCount == newErrorCompare) {
 				if(insideErrorLimit == insideErrorCounter){
 					
@@ -277,10 +324,10 @@ int errorCheckFile(char *inputFileName, int ptr_limit ) {
 
 			}		
 
-
 		}
 
-	
+
+	//check if theres errror return 0 if not return 1
 	if (ptr_limit == fileStackCounter && stackSizeTotal == fileStackNumberCounter) {	
 		return 1;
 	} else {
@@ -290,12 +337,17 @@ int errorCheckFile(char *inputFileName, int ptr_limit ) {
 }
 
 
-void helpMenu() {
-		printf("----| Help Menu |----\n");
-		printf("-h help menu"); 
-		printf("-i inputfilename  inputfilename is where the filename reads and it will show error if there is no filename found on the directory. output filename should be default name is output.dat  where the result is generated.\n");
-		printf("-o outputfilename  this command will use the default input file which is input.dat then create an output result to outputfilename(Which is the user specified name of the file \n"); 
-printf("-i inputfilename -o outputfilename     this command can use inputfilename (user choose the name)  and  generate output to the outputfilename(user choose the outputname) if it doesnt exist create one.\n"); 
 
+//help menu
+void helpMenu() {
+		printf("---------------------------------------------------------------| Help Menu |--------------------------------------------------------------------------\n");
+		printf("-h help menu\n"); 
+		printf("-i inputfilename                      | inputfilename is where the filename reads and it will show error if there is no filename found on the directory.\n"); 
+		printf("                                      | output filename should be default name is output.dat  where the result is generated.\n");
+		printf("-o outputfilename                     | this command will use the default input file which is input.dat\n"); 
+		printf("  				      | then create an output result to outputfilename(Which is the user specified name of the file \n"); 
+		printf("-i inputfilename -o outputfilename    | this command can use inputfilename (user choose the name)\n");
+		printf("				      | generate output to the outputfilename(user choose the outputname) if it doesnt exist create one.\n"); 
+		printf("------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 }
 
