@@ -8,7 +8,7 @@
 #include <sys/wait.h>	
 
 void helpMenu();
-int errorCheckFile(char *inputFileName, int ptr_limit);
+int errorCheckFile(char *inputFileName, int ptr_limit, char *argv0Name);
 int forkProcess(char *inputFileName, char *outputFileName, int ptr_limiti, char *arg0Name, int newLineCount);
 
 int main (int argc, char *argv[]) {
@@ -139,7 +139,7 @@ int main (int argc, char *argv[]) {
 
 
 		//error Checking inside the files
-		int errorResult = errorCheckFile(inputFileName,ptr_limit);
+		int errorResult = errorCheckFile(inputFileName,ptr_limit,argv[0]);
 
 		
 		if(errorResult == 1) {
@@ -249,6 +249,13 @@ int forkProcess(char *inputFileName, char *outputFileName, int ptr_limit, char *
 
 			//print out the children and parent pid
 			FILE *out1 = fopen(outputFileName, "a");
+			if(out1 == NULL){
+				snprintf(errorMessage, sizeof(errorMessage), "%s: Error", arg0Name);
+				perror(errorMessage);
+				return 0;
+			}
+
+
 			fprintf(out1, "All children where: ");
 			
 			int m;
@@ -265,10 +272,16 @@ int forkProcess(char *inputFileName, char *outputFileName, int ptr_limit, char *
 }
 
 //error checking for inside the file
-int errorCheckFile(char *inputFileName, int ptr_limit ) {
+int errorCheckFile(char *inputFileName, int ptr_limit,char *arg0Name ) {
+		char errorMessage[100];
 		//check if the file numbers are correct or not
 		FILE *f3 = fopen(inputFileName, "r");
-	
+		if(f3 == NULL){
+			snprintf(errorMessage, sizeof(errorMessage), "%s: Error", arg0Name);
+			perror(errorMessage);
+			return 0;
+		}
+
 		int bufSize = 100;
 		char buffer[bufSize];
 
@@ -324,6 +337,7 @@ int errorCheckFile(char *inputFileName, int ptr_limit ) {
 		}
 
 
+	fclose(f3);
 	//check if theres errror return 0 if not return 1
 	if (ptr_limit == fileStackCounter && stackSizeTotal == fileStackNumberCounter) {	
 		return 1;
