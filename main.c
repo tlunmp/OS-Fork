@@ -41,9 +41,6 @@ int main (int argc, char *argv[]) {
 			case 'o':
 				strcpy(outputFileName, optarg);
 				break;
-			default:
-				printf("test");
-				break;
 		}
 
 
@@ -64,9 +61,9 @@ int main (int argc, char *argv[]) {
 	FILE *f = fopen(inputFileName,"r");
 	
 	// if file open error and return
-	if(f == NULL){
-		fprintf(stderr,"%s: ", argv[0]);
-		perror("Error");
+	if(f == NULL){	
+		snprintf(errorMessage, sizeof(errorMessage), "%s: Error", argv[0]);
+		perror(errorMessage);
 		return 0;
 	}
 
@@ -99,13 +96,13 @@ int main (int argc, char *argv[]) {
 		int flag = 0;
 		forkNumberLength = strlen(errorBuffer);	
 		for(m=0; m < forkNumberLength; m++){	
-			if(isspace(errorBuffer[m]) && !isspace(errorBuffer[m+1])) {										
-				flag = 1;
-			}
 			if(errorBuffer[0] == '\n'){
 				flag = 0;
 			}
 
+			if(isspace(errorBuffer[m]) && !isspace(errorBuffer[m+1])) {										
+				flag = 1;
+			}
 		}
 
 		if(flag == 1) {
