@@ -8,8 +8,7 @@
 #include <sys/wait.h>	
 
 void helpMenu();
-void forkProcess(char *inputFileName, char *outputFileName);
-
+int errorCheckFile(char *inputFileName, int ptr_limit);
 
 int main (int argc, char *argv[]) {
 
@@ -127,48 +126,11 @@ int main (int argc, char *argv[]) {
 		
 		int i, line = 0;
 
+		int errorResult = errorCheckFile(inputFileName,ptr_limit);
 
-
-		//check if the file numbers are correct or not
-		FILE *f3 = fopen(inputFileName, "r");
-	
-		int fileStackCounter = 0;
-		int insideErrorLimit = 1;
-		int insideErrorCounter = 0;
-		int newErrorCompare = 0;
-		int newLineErrorCount = 1;
-		int errorLine = 0;
-
-		while(fgets(buffer,bufSize,f3) != NULL){
-			errorLine++;
-			if(newLineErrorCount == newErrorCompare) {
-				if(insideErrorLimit == insideErrorCounter){
-
-					insideErrorLimit +=2;
-
-				} else {
-					printf("%s",buffer);
-					//check if there is 2 numbers terminates
-					int o;
-					forkNumberLength = strlen(buffer);	
-					for(o=0; o < forkNumberLength; o++){	
-						if(isspace(buffer[o]))										
-							fileStackCounter++;
-						}
-
-				}
-				insideErrorCounter++;
-
-			} else {
-				newErrorCompare++;
-
-			}		
-
-
-		}
-
-		if (ptr_limit == fileStackCounter) {	
+		printf("%d", errorResult);
 		
+		if(errorResult == 1) {
 			//starts the fork
 			for (i = 0; i < ptr_limit; i++) {	
 
@@ -259,6 +221,72 @@ int main (int argc, char *argv[]) {
 
 	}
 	return 0;
+}
+
+int errorCheckFile(char *inputFileName, int ptr_limit ) {
+		//check if the file numbers are correct or not
+		FILE *f3 = fopen(inputFileName, "r");
+	
+		int bufSize = 100;
+		char buffer[bufSize];
+
+		int fileStackCounter = 0;
+		int fileStackNumberCounter = 0;
+		int insideErrorLimit = 1;
+		int insideErrorCounter = 0;
+		int newErrorCompare = 0;
+		int newLineErrorCount = 1;
+		int errorLine = 0;
+		int stackSizeError = 0;
+		int stackSizeTotal = 0;
+		int forkNumberLength = 0;
+
+		while(fgets(buffer,bufSize,f3) != NULL){
+			errorLine++;
+			if(newLineErrorCount == newErrorCompare) {
+				if(insideErrorLimit == insideErrorCounter){
+					
+					//check if there is 2 numbers terminates
+					int o;
+					forkNumberLength = strlen(buffer);	
+					for(o=0; o < forkNumberLength; o++){	
+						if(isspace(buffer[o]) && !isspace(buffer[o+1])) {										
+							fileStackNumberCounter++;
+						}
+
+					}
+					insideErrorLimit +=2;
+
+				} else {
+					//check if there is 2 numbers terminates
+					int o;
+					forkNumberLength = strlen(buffer);	
+					for(o=0; o < forkNumberLength; o++){	
+						if(isspace(buffer[o]) && !isspace(buffer[o+1])) {										
+							fileStackCounter++;
+						}
+
+					}
+					stackSizeError = atoi(buffer);
+					stackSizeTotal += stackSizeError;
+				}
+				insideErrorCounter++;
+
+			} else {
+				newErrorCompare++;
+
+			}		
+
+
+		}
+
+	
+	if (ptr_limit == fileStackCounter && stackSizeTotal == fileStackNumberCounter) {	
+		return 1;
+	} else {
+		return 0;
+	}
+
 }
 
 
